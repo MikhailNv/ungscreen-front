@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios'
+import { Select, ConfigProvider } from 'antd';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
+import "./Chart.css"
 
-const CandlestickChart = ({symbol}) => {
+const CandlestickChart = ({symbol, interval}) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const candleSeriesRef = useRef(null);
   const wsRef = useRef(null);
   const isLoadingHistoryRef = useRef(false); // Ref для актуального состояния
   const [isConnected, setIsConnected] = useState(false);
+  const chartInterval = useRef(1);
   const currentCandleRef = useRef(null);
   const oldestTimestampRef = useRef(null);
+  // const resizeObserver = useRef();
 
   const HISTORY_CHUNK_SIZE = 500
 
@@ -25,7 +29,7 @@ const CandlestickChart = ({symbol}) => {
         params: {
           category: 'linear',
           symbol: symbol,
-          interval: 1,
+          interval: chartInterval.current,
           limit: HISTORY_CHUNK_SIZE,
           end: oldestTimestampRef.current - 60 // Запрашиваем данные до текущей oldest точки
         }
@@ -97,7 +101,17 @@ const CandlestickChart = ({symbol}) => {
   }, []);
 
   const connectWebSocket = useCallback(() => {
-    if (!wsRef.current) { wsRef.current = new WebSocket("ws://127.0.0.1:8000/ws"); };
+    if (!wsRef.current) { 
+      wsRef.current = new WebSocket(`ws://127.0.0.1:8000/ws/${symbol}/${chartInterval.current}`);
+      wsRef.current.interval = chartInterval.current;
+      wsRef.current.symbol = symbol;
+    }
+    else if (wsRef.current.interval !== chartInterval.current) {
+      wsRef.current.close()
+      wsRef.current = new WebSocket(`ws://127.0.0.1:8000/ws/${symbol}/${chartInterval.current}`);
+      wsRef.current.interval = chartInterval.current;
+      wsRef.current.symbol = symbol;
+    }
 
     wsRef.current.onopen = () => {
       console.log('WebSocket connected');
@@ -107,7 +121,7 @@ const CandlestickChart = ({symbol}) => {
     wsRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        processCandleData(data);
+        processCandleData(data["data"]);
       } catch (error) {
         console.error('Error parsing message:', error);
       }
@@ -129,7 +143,6 @@ const CandlestickChart = ({symbol}) => {
 
   // Обработка данных свечи
   const processCoinHistory = useCallback(() => {
-    console.log("IN PROCESS COIN HISTORY")
     if (isLoadingHistoryRef.current) return;
 
     isLoadingHistoryRef.current = true;
@@ -138,7 +151,7 @@ const CandlestickChart = ({symbol}) => {
       params: {
         category: 'linear',
         symbol: symbol,
-        interval: 1,
+        interval: chartInterval.current,
         limit: HISTORY_CHUNK_SIZE
       }
     }).then((resp) => {
@@ -209,7 +222,6 @@ const CandlestickChart = ({symbol}) => {
     };
     chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
 
-
     const watermarks = document.querySelectorAll('#tv-attr-logo');
     watermarks.forEach((watermark) => {
       watermark.style.display = 'none';
@@ -223,38 +235,50 @@ const CandlestickChart = ({symbol}) => {
     };
   }, [loadMoreHistory, processCoinHistory]);
 
+  const handleIntervalChange = (_, option) => {
+    chartInterval.current = parseInt(option.value)
+    processCoinHistory();
+  };
+
   return (
-    // <div style={{ width: '100%', height: '100%' }}>
-    //   {isLoadingHistoryRef.current && (
-    //     <div style={{
-    //       position: 'absolute',
-    //       top: 10,
-    //       left: '50%',
-    //       transform: 'translateX(-50%)',
-    //       zIndex: 100,
-    //       backgroundColor: 'rgba(0,0,0,0.7)',
-    //       color: 'white',
-    //       padding: '5px 10px',
-    //       borderRadius: 4,
-    //     }}>
-    //       Loading historical data...
-    //     </div>
-    //   )}
-    //   <div style={{
-    //     position: 'absolute',
-    //     top: 10,
-    //     right: 10,
-    //     zIndex: 100,
-    //     backgroundColor: isConnected ? '#4CAF50' : '#F44336',
-    //     color: 'white',
-    //     padding: '5px 10px',
-    //     borderRadius: 4,
-    //   }}>
-    //     {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
-    //   </div>
-    //   <div ref={chartContainerRef} style={{ width: '200px', height: '100px' }} />
-    // </div>
-    <div className="chart-container" ref={chartContainerRef} id={`chart-${symbol}`} />
+    <div className="chart-nav-wrapper">
+      <div className="chart-nav">
+        <ConfigProvider
+          theme={{
+            token: {
+              // Seed Token
+              // colorPrimary: '#1A1A1A',
+              // colorBorder: '#1A1A1A',
+              // colorText: 'white',
+              // colorIcon: 'white',
+              // borderRadius: 2,
+
+              // Alias Token
+              // colorBgContainer: '#1A1A1A',
+            },
+          }}
+        >
+          <Select
+            activeBorderColor='red'
+            size='small'
+            defaultValue="1"
+            style={{ width: "70px", height: "100%" }}
+            onSelect={handleIntervalChange}
+            options={[
+              { value: '1', label: '1м' },
+              { value: '3', label: '3м' },
+              { value: '5', label: '5м' },
+              { value: '15', label: '15м'},
+            ]}
+          />
+        </ConfigProvider>
+        <div className="chart-nav-item chart-nav-item-center">{symbol}</div>
+        <div className="chart-nav-item chart-nav-item-right">сохранить</div>
+      </div>
+      <div className="chart-wrapper">
+        <div className="chart-container" ref={chartContainerRef} id={`chart-${symbol}`} />
+      </div>
+    </div>
   );
 };
 

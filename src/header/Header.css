@@ -1,0 +1,28 @@
+.header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    background: #272727;
+    width: 100%;
+    padding: 15px;
+}
+
+/* .top-navigation > .label {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    color: white;
+}
+
+.top-navigation > .menu {
+    grid-column: 3;
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+.menu-outlined {
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+} */

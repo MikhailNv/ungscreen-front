@@ -1,0 +1,43 @@
+.menu-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+.menu {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    border: 1px solid #272727;
+
+    align-items: center;
+    justify-content: right;
+}
+
+.menu-open {
+    border: 1px solid #747474;
+    border-radius: 20px;
+    gap: 10px;
+    padding: 10px;
+    margin-right: 10px;
+}
+
+.menu-icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #747474;
+    padding-right: 10px;
+    gap: 20px;
+}
+
+.menu-icon {
+    font-size: 20px;
+    color: #747474;
+    cursor: pointer;
+}
+
+.menu-icon:hover {
+    color: white;
+}

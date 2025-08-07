@@ -1,0 +1,34 @@
+.candlestick-settings-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+.candlestick-settings {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.candlestick-settings > .name {
+    color: #747474;
+    border-right: 1px solid #747474;
+    padding-right: 10px;
+}
+
+.candlestick-settings > .icon-wrapper {
+    padding-left: 10px;
+}
+
+.candlestick-settings > .icon-wrapper > .icon {
+    color: #747474;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.5s ease;
+    transform-origin: center;
+}
+
+.candlestick-settings > .icon-wrapper > .icon-active {
+    transform: rotate(180deg);
+}
